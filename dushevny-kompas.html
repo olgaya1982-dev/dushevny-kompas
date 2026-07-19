@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="color-scheme" content="light">
+<title>Душевный компас</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #E7DBBE;
+    --paper: #F7EFD9;
+    --paper2: #F0E6C9;
+    --ink: #2E2A22;
+    --ink-muted: #6E5F45;
+    --line: rgba(46,42,34,0.22);
+    --text: #2E2A22;
+    --muted: #6E5F45;
+    /* part 1 — pulse, приглушённые чернильные тона */
+    --c1:#C1502E; --c2:#B8862A; --c3:#3C7A63; --c4:#A34C6C; --c5:#3A5C7D; --c6:#7A5A38;
+    /* part 2 — общая картина, тёплые акварельные тона */
+    --p1:#B5652E; --p2:#2E6E8A; --p3:#8A3B54; --p4:#5A4A87; --p5:#4C7A3C; --p6:#B98A28;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html{ background: var(--bg); }
+  body{
+    margin:0; background-color: var(--bg); color:var(--text);
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse 55% 30% at 12% 5%, rgba(120,95,50,0.14), transparent 60%),
+      radial-gradient(ellipse 45% 28% at 92% 18%, rgba(150,60,40,0.10), transparent 60%),
+      radial-gradient(ellipse 60% 35% at 50% 105%, rgba(60,90,70,0.10), transparent 60%);
+    font-family:'Space Mono', monospace;
+    min-height:100vh; display:flex; justify-content:center;
+    padding: 30px 18px 60px;
+  }
+  .app{ width:100%; max-width:480px; }
+  .eyebrow{ font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; font-weight:700;}
+  h1{ font-family:'Caveat', cursive; font-weight:700; font-size:46px; line-height:1.1; margin:0 0 12px; color:var(--ink);}
+  .lede{ color:var(--ink-muted); font-size:14.5px; line-height:1.6; margin:0 0 26px; font-weight:400;}
+
+  .screen{ display:none; animation: rise .45s ease both; }
+  .screen.active{ display:block; }
+  @keyframes rise{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+
+  .method-note{ font-size:13px; color:var(--muted); line-height:1.6; background:rgba(46,42,34,0.05); border:1px dashed var(--line); border-radius:10px; padding:14px 16px; margin-bottom:26px;}
+
+  .start-btn{ width:100%; border:2px solid var(--ink); cursor:pointer; background: var(--paper); color:var(--ink); font-family:'Space Mono', monospace; font-weight:700; font-size:15px; letter-spacing:.04em; text-transform:uppercase; padding:18px 24px; border-radius:4px 14px 4px 14px; box-shadow: 3px 4px 0 rgba(46,42,34,0.55); transform: rotate(-0.4deg);}
+  .start-btn:active{ transform: translate(2px,2px) rotate(-0.4deg); box-shadow: 1px 1px 0 rgba(46,42,34,0.55); }
+  .meta-line{ display:flex; gap:16px; margin-top:22px; flex-wrap:wrap; }
+  .meta-item{ font-size:11.5px; color:var(--muted); display:flex; align-items:center; gap:6px; font-weight:700;}
+  .dot{ width:5px; height:5px; border-radius:50%; background:var(--muted); }
+
+  .progress-track{ height:2px; background:var(--line); margin-bottom:28px; overflow:hidden; border-radius:2px;}
+  .progress-fill{ height:100%; background: var(--ink); width:8%; transition: width .4s ease;}
+  .q-index{ font-size:12px; color:var(--muted); font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px;}
+  .q-pillar{ font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px;}
+  .q-text{ font-family:'Caveat', cursive; font-weight:700; font-size:32px; line-height:1.22; margin:0 0 10px; color:var(--ink);}
+  .q-context{ font-size:13.5px; color:var(--muted); line-height:1.55; margin:0 0 30px;}
+
+  .value-readout{ text-align:center; font-family:'Caveat', cursive; font-size:56px; font-weight:700; margin: 2px 0 0; line-height:1;}
+  .value-word{ text-align:center; font-size:13.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; margin-bottom:24px; min-height:18px;}
+
+  input[type=range]{ -webkit-appearance:none; width:100%; height:2px; background: var(--ink-muted); outline:none; margin: 10px 0 14px; border-radius:0;
+    background-image: repeating-linear-gradient(90deg, var(--ink-muted) 0 1px, transparent 1px 10%);}
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; border-radius:50% 50% 50% 4px; background: var(--qcolor); border: 2px solid var(--ink); cursor:pointer; box-shadow: 2px 2px 0 rgba(46,42,34,0.4); transform: rotate(-8deg);}
+  input[type=range]::-moz-range-thumb{ width:22px; height:22px; border-radius:50% 50% 50% 4px; background: var(--qcolor); border: 2px solid var(--ink); cursor:pointer;}
+
+  .anchor-row{ display:flex; justify-content:space-between; margin-bottom:34px; padding:0 1px;}
+  .anchor{ font-size:10.5px; color:rgba(46,42,34,0.4); text-align:center; width:16.6%; line-height:1.3; font-weight:700;}
+  .anchor.on{ opacity:1; color:var(--qcolor) !important; text-decoration:underline; text-decoration-style:wavy;}
+
+  .nav-row{ display:flex; gap:12px; }
+  .btn{ cursor:pointer; font-family:'Space Mono', monospace; font-weight:700; font-size:14px; letter-spacing:.03em; text-transform:uppercase; padding:15px 20px; border-radius:4px 12px 4px 12px;}
+  .btn:active{ transform: translate(1px,1px); }
+  .btn-primary{ flex:1; background: var(--ink); color:var(--paper); border:2px solid var(--ink); box-shadow: 3px 3px 0 rgba(46,42,34,0.3);}
+  .btn-ghost{ background:transparent; color:var(--ink-muted); border:2px dashed var(--line);}
+
+  .card{ background: var(--paper); border:1.5px solid var(--ink); border-radius:4px 22px 4px 22px; padding:24px 18px 22px; margin-bottom:20px; box-shadow: 4px 5px 0 rgba(46,42,34,0.18); transform: rotate(-0.3deg); position:relative;}
+  .card:nth-of-type(2){ transform: rotate(0.35deg); }
+  .card-title{ font-family:'Caveat', cursive; font-weight:700; font-size:22px; text-align:center; margin:0 0 2px; color:var(--ink);}
+  .card-sub{ text-align:center; color:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px;}
+  canvas{ width:100%; height:auto; display:block; margin: 6px auto 2px; }
+  .insight{ font-family:'Caveat', cursive; font-weight:700; font-size:22px; line-height:1.4; text-align:center; margin:14px 6px 4px; color:var(--ink);}
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 14px; justify-content:center; margin-top:18px;}
+  .legend-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); font-weight:700;}
+  .swatch{ width:8px; height:8px; border-radius:2px; }
+  .share-row{ display:flex; gap:10px; margin-top: 4px;}
+  .retake{ text-align:center; margin-top:16px; }
+  .retake a{ color:var(--muted); font-size:13px; text-decoration:underline; cursor:pointer; font-weight:700;}
+  .divider-icon{ text-align:center; font-size:30px; margin-bottom:14px; color:var(--ink-muted);}
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--paper); font-weight:700; font-size:13px; padding:12px 20px; border-radius:4px 12px 4px 12px; opacity:0; pointer-events:none; transition: all .3s ease; box-shadow:3px 3px 0 rgba(0,0,0,0.25); z-index:50;}
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- INTRO -->
+  <section class="screen active" id="screen-intro">
+    <p class="eyebrow">Два теста · 12 вопросов · 5 минут</p>
+    <h1>Твой душевный компас</h1>
+    <p class="lede">Сначала — быстрый пульс: как ты <em>прямо сейчас</em>. Потом — взгляд шире: как складывается последнее время в целом. В конце — одна картинка с обоими результатами.</p>
+    <button class="start-btn" onclick="goTo('screen-q1'); renderQ(1);">Начать</button>
+    <div class="meta-line">
+      <span class="meta-item"><span class="dot"></span>Анонимно</span>
+      <span class="meta-item"><span class="dot"></span>Результат — картинкой</span>
+      <span class="meta-item"><span class="dot"></span>Одна ссылка на оба</span>
+    </div>
+  </section>
+
+  <!-- PART 1 QUESTIONS -->
+  <section class="screen" id="screen-q1">
+    <div class="progress-track"><div class="progress-fill" id="fill1"></div></div>
+    <p class="q-index" id="idx1">Пульс · вопрос 1 из 6</p>
+    <h2 class="q-text" id="text1"></h2>
+    <p class="q-context" id="ctx1"></p>
+    <div class="value-readout" id="val1">5</div>
+    <div class="value-word" id="word1"></div>
+    <input type="range" id="slider1" min="0" max="10" value="5" oninput="onSlide(1,this.value)">
+    <div class="anchor-row" id="anchors1"></div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="prevQ(1)" id="back1">Назад</button>
+      <button class="btn btn-primary" onclick="nextQ(1)" id="next1">Дальше</button>
+    </div>
+  </section>
+
+  <!-- TRANSITION -->
+  <section class="screen" id="screen-mid">
+    <div class="divider-icon">✦</div>
+    <p class="eyebrow" style="text-align:center">Часть 1 готова</p>
+    <h1 style="text-align:center">Теперь — шире</h1>
+    <p class="lede" style="text-align:center">Дальше вопросы не про сегодня, а про то, как в целом идут дела в последнее время.</p>
+    <button class="start-btn" onclick="goTo('screen-q2'); renderQ(2);">Продолжить</button>
+  </section>
+
+  <!-- PART 2 QUESTIONS -->
+  <section class="screen" id="screen-q2">
+    <div class="progress-track"><div class="progress-fill" id="fill2"></div></div>
+    <p class="q-index" id="idx2">Общая картина · вопрос 1 из 6</p>
+    <p class="q-pillar" id="pillar2"></p>
+    <h2 class="q-text" id="text2"></h2>
+    <p class="q-context" id="ctx2"></p>
+    <div class="value-readout" id="val2">5</div>
+    <div class="value-word" id="word2"></div>
+    <input type="range" id="slider2" min="0" max="10" value="5" oninput="onSlide(2,this.value)">
+    <div class="anchor-row" id="anchors2"></div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="prevQ(2)" id="back2">Назад</button>
+      <button class="btn btn-primary" onclick="nextQ(2)" id="next2">Дальше</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="screen-result">
+    <p class="eyebrow" id="resultDate">Готово</p>
+    <h1>Твой компас на сегодня</h1>
+    <p class="lede">Сохрани картинку или перешли ссылку — она откроет ровно этот результат, без пересдачи теста.</p>
+
+    <div class="card">
+      <p class="card-sub">Пульс · прямо сейчас</p>
+      <canvas id="canvasFlower" width="620" height="620"></canvas>
+      <p class="insight" id="insight1">—</p>
+      <div class="legend" id="legend1"></div>
+    </div>
+
+    <div class="card">
+      <p class="card-sub">Общая картина · последнее время</p>
+      <canvas id="canvasWheel" width="620" height="620"></canvas>
+      <p class="insight" id="insight2">—</p>
+      <div class="legend" id="legend2"></div>
+    </div>
+
+    <div class="share-row">
+      <button class="btn btn-primary" onclick="downloadCombined()">↓ Сохранить одной картинкой</button>
+    </div>
+    <div class="share-row" style="margin-top:10px;">
+      <button class="btn btn-ghost" style="flex:1" onclick="shareLink()">Ссылка на оба результата</button>
+    </div>
+    <p class="retake"><a onclick="location.href=location.pathname">Пройти заново</a></p>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ЧАСТЬ 1 — пульс-тест. Каждая ось — реальный источник, не выдумка:
+   Энергия и Фокус — отдельные пункты из Bond & Lader VAS, 1974 (lethargic–
+   energetic; muzzy–clearheaded). Легкость — Feeling Scale, Hardy & Rejeski,
+   1989. Активация — Felt Arousal Scale, Svebak & Murgatroyd, 1985 (оба
+   построены на модели базового аффекта Дж.Расселла, 1980). Опора — Single-
+   Item Self-Esteem Scale, Robins, Hendin & Trzesniewski, 2001. Своё дело —
+   пункт 4 из Meaning in Life Questionnaire, Steger, Frazier, Oishi & Kaler,
+   2006. Формат ответа приведён к единой шкале 0–10 и переведён на русский —
+   это адаптация оригиналов, не дословный перевод. Формулировки — без
+   гендерных окончаний, чтобы подходило и мужчинам, и женщинам. */
+const Q1 = [
+  { key:'energy', color:'--c1', name:'Энергия',
+    q:'Сколько сейчас энергии — на нуле или через край?',
+    ctx:'Про физический и психический ресурс — сколько топлива в баке.',
+    anchors:['на нуле','мало сил','средне','бодро','много сил','через край'] },
+  { key:'focus', color:'--c2', name:'Фокус',
+    q:'Насколько ясная сейчас голова?',
+    ctx:'Про ясность мышления прямо сейчас, а не про план на день.',
+    anchors:['туман','смутно','отчасти','ясно','чётко','кристально'] },
+  { key:'valence', color:'--c3', name:'Легкость',
+    q:'Как ощущается сейчас — в целом?',
+    ctx:'Про общий знак ощущений — плюс или минус.',
+    anchors:['плохо','так себе','нейтрально','неплохо','хорошо','прекрасно'] },
+  { key:'arousal', color:'--c4', name:'Активация',
+    q:'Насколько неспокойно внутри прямо сейчас — даже если снаружи всё тихо?',
+    ctx:'Про фоновое ощущение внутри, а не про внешний повод.',
+    anchors:['штиль','спокойно','движение','неспокойно','сильно','гудит'] },
+  { key:'confidence', color:'--c5', name:'Опора',
+    q:'Насколько высокая сейчас самооценка?',
+    ctx:'Про то, насколько сейчас есть опора на саму себя.',
+    anchors:['очень низкая','низкая','средняя','выше среднего','высокая','очень высокая'] },
+  { key:'meaning', color:'--c6', name:'Своё дело',
+    q:'Насколько ясна сейчас цель, к которой всё идёт?',
+    ctx:'Про ощущение направления, а не про конкретный план.',
+    anchors:['не ясна','смутно','отчасти','ясна','чётко','полностью'] },
+];
+
+/* ЧАСТЬ 2 — общая картина за последнее время. Структура вдохновлена моделью
+   благополучия PERMA (Мартин Селигман); формулировки авторские, не копируют
+   текст оригинального PERMA-Profiler (Butler & Kern, 2016). Без гендерных
+   окончаний — конструкции завязаны на предмет вопроса, а не на "ты". */
+const Q2 = [
+  { key:'p', color:'--p1', pillar:'Позитивные эмоции',
+    q:'Было ли на этой неделе утро, которое начиналось с ощущения «сегодня будет хороший день»?',
+    ctx:'Конкретный случай, а не общее впечатление о жизни.',
+    anchors:['ни разу','редко','пару раз','нередко','часто','ежедневно'] },
+  { key:'e', color:'--p2', pillar:'Вовлечённость',
+    q:'Было ли на этой неделе дело, за которым время шло незаметно?',
+    ctx:'Работа, хобби, разговор — что угодно, где время «исчезало».',
+    anchors:['не было','едва ли','пару раз','нередко','часто','постоянно'] },
+  { key:'r', color:'--p3', pillar:'Отношения',
+    q:'Если бы стало тяжело на душе среди ночи — нашёлся бы человек, кому можно написать?',
+    ctx:'Про этот конкретный момент, а не про «в целом есть друзья».',
+    anchors:['точно нет','навряд ли','не уверен','похоже да','да','точно да'] },
+  { key:'m', color:'--p4', pillar:'Смысл',
+    q:'То, чем заполнены будни — ощущается нужным ещё кому-то, не только тебе?',
+    ctx:'Например: клиентам, близким, делу, которое продолжится и без тебя.',
+    anchors:['только себе','в основном себе','отчасти','нужно другим','точно нужно','жизненно'] },
+  { key:'a', color:'--p5', pillar:'Достижения',
+    q:'Есть что-то, что месяц назад давалось трудно, а сейчас — легче?',
+    ctx:'Конкретный пример, а не общее ощущение роста.',
+    anchors:['так же','едва ли','возможно','немного','заметно','точно есть'] },
+  { key:'h', color:'--p6', pillar:'Общее ощущение',
+    q:'Если сравнить нынешнее состояние с тем, что было полгода назад — стало лучше?',
+    ctx:'Доверься первому ощущению, не считай долго.',
+    anchors:['хуже','чуть хуже','так же','чуть лучше','лучше','сильно лучше'] },
+];
+
+let cur1=0, cur2=0;
+let ans1 = Q1.map(()=>5);
+let ans2 = Q2.map(()=>5);
+
+function goTo(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+function anchorTier(v){ return Math.min(5, Math.floor(v/2)); }
+
+function renderQ(part){
+  const list = part===1?Q1:Q2, cur = part===1?cur1:cur2;
+  const q = list[cur];
+  document.getElementById('idx'+part).textContent = (part===1?'Пульс':'Общая картина') + ` · вопрос ${cur+1} из ${list.length}`;
+  if(part===2){ document.getElementById('pillar2').textContent = q.pillar.toUpperCase(); document.getElementById('pillar2').style.color = `var(${q.color})`; }
+  document.getElementById('text'+part).textContent = q.q;
+  document.getElementById('ctx'+part).textContent = q.ctx;
+  const val = (part===1?ans1:ans2)[cur];
+  document.getElementById('slider'+part).value = val;
+  document.getElementById('slider'+part).style.setProperty('--qcolor', `var(${q.color})`);
+  document.getElementById('val'+part).style.color = `var(${q.color})`;
+  document.getElementById('word'+part).style.color = `var(${q.color})`;
+  document.getElementById('fill'+part).style.background = `linear-gradient(90deg, var(${q.color}), #fff)`;
+  document.getElementById('fill'+part).style.width = `${(cur/list.length)*100 + 100/list.length}%`;
+  document.getElementById('back'+part).style.visibility = cur===0 ? 'hidden' : 'visible';
+  document.getElementById('next'+part).textContent = cur===list.length-1 ? 'Смотреть результат' : 'Дальше';
+  const row = document.getElementById('anchors'+part);
+  row.innerHTML = q.anchors.map((a,i)=>`<span class="anchor" data-i="${i}">${a}</span>`).join('');
+  updateReadout(part, val);
+}
+function updateReadout(part, v){
+  const list = part===1?Q1:Q2, cur = part===1?cur1:cur2;
+  const q = list[cur];
+  document.getElementById('val'+part).textContent = v;
+  document.getElementById('word'+part).textContent = q.anchors[anchorTier(v)];
+  document.querySelectorAll(`#anchors${part} .anchor`).forEach(el=>{
+    const on = +el.dataset.i === anchorTier(v);
+    el.classList.toggle('on', on);
+    el.style.setProperty('--qcolor', `var(${q.color})`);
+  });
+}
+function onSlide(part, v){ if(part===1) ans1[cur1]=+v; else ans2[cur2]=+v; updateReadout(part, +v); }
+function nextQ(part){
+  const list = part===1?Q1:Q2;
+  let cur = part===1?cur1:cur2;
+  if(cur < list.length-1){ cur++; if(part===1) cur1=cur; else cur2=cur; renderQ(part); }
+  else { if(part===1){ goTo('screen-mid'); } else { showResult(); } }
+}
+function prevQ(part){ let cur = part===1?cur1:cur2; if(cur>0){ cur--; if(part===1) cur1=cur; else cur2=cur; renderQ(part); } }
+
+function insightFor(list, a, keyName){
+  const entries = list.map(q=>({name:q[keyName], v:a[q.key]}));
+  const max = entries.reduce((m,e)=> e.v>m.v?e:m);
+  const min = entries.reduce((m,e)=> e.v<m.v?e:m);
+  if(max.v - min.v < 2) return `Ровный профиль — «${min.name.toLowerCase()}» держит общий уровень.`;
+  return `Сильнее всего — «${max.name.toLowerCase()}», больше всего просит внимания — «${min.name.toLowerCase()}».`;
+}
+
+function paramsToAnswers(){
+  const p = new URLSearchParams(location.search);
+  if(!p.has('e1')) return null;
+  return {
+    a1: { energy:+p.get('e1'), focus:+p.get('f1'), valence:+p.get('v1'), arousal:+p.get('ar1'), confidence:+p.get('c1'), meaning:+p.get('n1') },
+    a2: { p:+p.get('p2'), e:+p.get('e2'), r:+p.get('r2'), m:+p.get('m2'), a:+p.get('a2'), h:+p.get('h2') }
+  };
+}
+function buildShareUrl(a1,a2){
+  const p = new URLSearchParams({
+    e1:a1.energy, f1:a1.focus, v1:a1.valence, ar1:a1.arousal, c1:a1.confidence, n1:a1.meaning,
+    p2:a2.p, e2:a2.e, r2:a2.r, m2:a2.m, a2:a2.a, h2:a2.h
+  });
+  return `${location.pathname}?${p.toString()}`;
+}
+
+function showResult(fromParams){
+  const a1 = fromParams ? fromParams.a1 : Object.fromEntries(Q1.map((q,i)=>[q.key, ans1[i]]));
+  const a2 = fromParams ? fromParams.a2 : Object.fromEntries(Q2.map((q,i)=>[q.key, ans2[i]]));
+  goTo('screen-result');
+  const d = new Date();
+  document.getElementById('resultDate').textContent = d.toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+  document.getElementById('insight1').textContent = insightFor(Q1, a1, 'name');
+  document.getElementById('insight2').textContent = insightFor(Q2, a2, 'pillar');
+  drawFlower(document.getElementById('canvasFlower'), Q1, a1);
+  drawWheel(document.getElementById('canvasWheel'), Q2, a2);
+  document.getElementById('legend1').innerHTML = Q1.map(q=>`<span class="legend-item"><span class="swatch" style="background:var(${q.color})"></span>${q.name}</span>`).join('');
+  document.getElementById('legend2').innerHTML = Q2.map(q=>`<span class="legend-item"><span class="swatch" style="background:var(${q.color})"></span>${q.pillar}</span>`).join('');
+  history.replaceState(null,'', buildShareUrl(a1,a2));
+}
+
+function hexFromVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function seededRnd(seed){ let s=seed; return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+
+function drawBackdrop(ctx,W,H,seed){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim();
+  ctx.fillRect(0,0,W,H);
+  const rnd = seededRnd(seed);
+  ctx.fillStyle='rgba(46,42,34,0.5)';
+  for(let i=0;i<90;i++){
+    const x=rnd()*W, y=rnd()*H, r=rnd()*1.1+0.3;
+    ctx.globalAlpha = rnd()*0.12+0.03;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function jitter(rnd, amt){ return (rnd()-0.5)*amt; }
+
+/* Часть 1: насыщенный "цветок" маслом — лепестки кривыми Безье, плотная
+   многослойная заливка с текстурными мазками вместо блёклой акварели */
+function drawFlower(canvas, list, a){
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=235;
+  drawBackdrop(ctx,W,H,42);
+  const rnd = seededRnd(101);
+  const colors = list.map(q=>hexFromVar(q.color));
+  const values = list.map(q=>a[q.key]);
+  const n = list.length, step=(Math.PI*2)/n, start=-Math.PI/2;
+
+  ctx.strokeStyle='rgba(46,42,34,0.16)'; ctx.lineWidth=1; ctx.setLineDash([4,5]);
+  [0.33,0.66,1].forEach(f=>{ ctx.beginPath();
+    for(let i=0;i<=n;i++){ const ang=start+i*step; const x=cx+Math.cos(ang)*R*f,y=cy+Math.sin(ang)*R*f; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+    ctx.stroke(); });
+  ctx.setLineDash([]);
+
+  const pts = values.map((v,i)=>{ const ang=start+i*step, dist=Math.max((v/10)*R,26); return {x:cx+Math.cos(ang)*dist+jitter(rnd,4),y:cy+Math.sin(ang)*dist+jitter(rnd,4),dist}; });
+  function petalPath(i, wob){
+    const p=pts[i]; const prevAng=start+(i-0.5)*step, nextAng=start+(i+0.5)*step;
+    const midDist=Math.max(p.dist*0.44,20);
+    const c1x=cx+Math.cos(prevAng)*midDist+jitter(rnd,wob), c1y=cy+Math.sin(prevAng)*midDist+jitter(rnd,wob);
+    const c2x=cx+Math.cos(nextAng)*midDist+jitter(rnd,wob), c2y=cy+Math.sin(nextAng)*midDist+jitter(rnd,wob);
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.quadraticCurveTo(c1x,c1y,p.x,p.y); ctx.quadraticCurveTo(c2x,c2y,cx,cy); ctx.closePath();
+  }
+  pts.forEach((p,i)=>{
+    // плотная база
+    petalPath(i,4); ctx.fillStyle=colors[i]+'e6'; ctx.fill();
+    // второй слой чуть темнее по контуру — глубина мазка
+    petalPath(i,6); ctx.lineWidth=5; ctx.strokeStyle=colors[i]+'55'; ctx.stroke();
+    // светлый блик ближе к центру лепестка
+    ctx.save(); petalPath(i,4); ctx.clip();
+    const hl=ctx.createRadialGradient(cx,cy,0,cx,cy,p.dist*0.7);
+    hl.addColorStop(0,'rgba(255,255,255,0.35)'); hl.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=hl; ctx.fillRect(0,0,W,H); ctx.restore();
+    // тёмный контур поверх — как обводка кистью
+    petalPath(i,3); ctx.lineWidth=2.5; ctx.strokeStyle=colors[i]; ctx.globalAlpha=0.9; ctx.stroke(); ctx.globalAlpha=1;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,9,0,Math.PI*2); ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--paper').trim(); ctx.fill();
+  ctx.lineWidth=2; ctx.strokeStyle='rgba(46,42,34,0.55)'; ctx.stroke();
+  pts.forEach((p,i)=>{ ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fillStyle=colors[i]; ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--paper').trim(); ctx.lineWidth=2.5; ctx.fill(); ctx.stroke(); });
+  labelAxes(ctx, list, values, colors, cx, cy, R, start, step, 'name');
+}
+
+/* Часть 2: насыщенное "колесо" маслом с прямыми гранями — та же плотная
+   живописная эстетика, но без кривых лепестков, для отличия от первого теста */
+function drawWheel(canvas, list, a){
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R=235;
+  drawBackdrop(ctx,W,H,7);
+  const rnd = seededRnd(202);
+  const colors = list.map(q=>hexFromVar(q.color));
+  const values = list.map(q=>a[q.key]);
+  const n = list.length, step=(Math.PI*2)/n, start=-Math.PI/2;
+
+  ctx.strokeStyle='rgba(46,42,34,0.16)'; ctx.lineWidth=1; ctx.setLineDash([4,5]);
+  [0.25,0.5,0.75,1].forEach(f=>{ ctx.beginPath();
+    for(let i=0;i<=n;i++){ const ang=start+i*step; const x=cx+Math.cos(ang)*R*f,y=cy+Math.sin(ang)*R*f; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+    ctx.stroke(); });
+  for(let i=0;i<n;i++){ const ang=start+i*step; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ang)*R, cy+Math.sin(ang)*R); ctx.stroke(); }
+  ctx.setLineDash([]);
+
+  const pts = values.map((v,i)=>{ const ang=start+i*step, dist=Math.max((v/10)*R,26); return {x:cx+Math.cos(ang)*dist+jitter(rnd,4),y:cy+Math.sin(ang)*dist+jitter(rnd,4)}; });
+
+  for(let i=0;i<n;i++){
+    const p1=pts[i], p2=pts[(i+1)%n];
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.closePath();
+    const g = ctx.createLinearGradient(p1.x,p1.y,p2.x,p2.y);
+    g.addColorStop(0, colors[i]+'d9'); g.addColorStop(1, colors[(i+1)%n]+'d9');
+    ctx.fillStyle=g; ctx.fill();
+  }
+  // светлый блик из центра — эффект плотного мазка
+  ctx.save();
+  ctx.beginPath(); pts.forEach((p,i)=> i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.closePath(); ctx.clip();
+  const hl=ctx.createRadialGradient(cx,cy,0,cx,cy,R*0.65);
+  hl.addColorStop(0,'rgba(255,255,255,0.30)'); hl.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=hl; ctx.fillRect(0,0,W,H); ctx.restore();
+
+  ctx.beginPath(); pts.forEach((p,i)=> i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.closePath();
+  ctx.lineWidth=3; ctx.strokeStyle='rgba(46,42,34,0.85)'; ctx.stroke();
+
+  ctx.beginPath(); ctx.arc(cx,cy,7,0,Math.PI*2); ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--paper').trim(); ctx.fill();
+  ctx.lineWidth=1.5; ctx.strokeStyle='rgba(46,42,34,0.5)'; ctx.stroke();
+  pts.forEach((p,i)=>{ ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fillStyle=colors[i]; ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--paper').trim(); ctx.lineWidth=2; ctx.fill(); ctx.stroke(); });
+  labelAxes(ctx, list, values, colors, cx, cy, R, start, step, 'pillar');
+}
+
+function labelAxes(ctx, list, values, colors, cx, cy, R, start, step, nameKey){
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  list.forEach((q,i)=>{
+    const ang=start+i*step, lx=cx+Math.cos(ang)*(R+50), ly=cy+Math.sin(ang)*(R+50);
+    ctx.font='700 14px "Space Mono", monospace'; ctx.fillStyle='#2E2A22'; ctx.fillText(q[nameKey], lx, ly-10);
+    ctx.font='700 20px "Caveat", cursive'; ctx.fillStyle=colors[i]; ctx.fillText(values[i]+'/10', lx, ly+12);
+  });
+}
+
+function downloadCombined(){
+  const c1 = document.getElementById('canvasFlower'), c2 = document.getElementById('canvasWheel');
+  const pad=40, gap=30, labelH=56;
+  const W = c1.width + pad*2;
+  const H = pad*2 + labelH + c1.height + gap + labelH + c2.height;
+  const out = document.createElement('canvas'); out.width=W; out.height=H;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#E7DBBE'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+  ctx.font='700 34px "Caveat", cursive'; ctx.fillStyle='#2E2A22';
+  ctx.fillText('Душевный компас', W/2, pad+10);
+  ctx.font='700 13px "Space Mono", monospace'; ctx.fillStyle='#6E5F45';
+  ctx.fillText(document.getElementById('resultDate').textContent, W/2, pad+30);
+  ctx.font='700 15px "Space Mono", monospace'; ctx.fillStyle='#2E2A22';
+  ctx.fillText('ПУЛЬС · ПРЯМО СЕЙЧАС', W/2, pad+labelH+8);
+  ctx.drawImage(c1, pad, pad+labelH+14);
+  const y2 = pad+labelH+14+c1.height+gap;
+  ctx.fillText('ОБЩАЯ КАРТИНА · ПОСЛЕДНЕЕ ВРЕМЯ', W/2, y2+16);
+  ctx.drawImage(c2, pad, y2+24);
+  const link=document.createElement('a'); link.download='dushevny-kompas.png'; link.href=out.toDataURL('image/png'); link.click();
+  showToast('Картинка сохранена');
+}
+
+async function shareLink(){
+  const url=location.href;
+  if(navigator.share){ try{ await navigator.share({title:'Мой душевный компас', url}); return; }catch(e){} }
+  try{ await navigator.clipboard.writeText(url); showToast('Ссылка скопирована'); }
+  catch(e){ showToast('Скопируй ссылку из адресной строки'); }
+}
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+(function init(){ const fp=paramsToAnswers(); if(fp){ showResult(fp); } })();
+</script>
+</body>
+</html>
