@@ -12,9 +12,7 @@
 
 ## Как использовать
 
-Открой [demo-ссылку](#) *(добавим после включения GitHub Pages)* или скачай `dushevny-kompas.html` и открой в браузере.
-
-## Технологии
+Открой [Душевный компас](https://olgaya1982-dev.github.io/dushevny-kompas/dushevny-kompas.html) прямо в браузере — установка не нужна.
 
 Vanilla JS, HTML5 Canvas для визуализации, шрифты Google Fonts (Caveat, Space Mono).
 
